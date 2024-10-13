@@ -2,30 +2,19 @@ const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
 
 class Engine {
-	constructor() {
-		this.defaultWindowSize = new Vector2(1024, 567);
-		this.init();
-		this.playerPos = new Vector2(200, 200)
-		this.start;
+	constructor(size){
+		canvas.width = size.x;
+		canvas.height = size.y;
+		this.objects = [];
+		window.requestAnimationFrame(this.run)
 	}
-	init() {
-		canvas.width = this.defaultWindowSize.x;
-		canvas.height = this.defaultWindowSize.y;
+	run = () => {
+		drawRect(new Vector2(canvas.width/2,canvas.height/2), new Vector2(canvas.width, canvas.height), 'white');
+		for (const obj of this.objects){
+			obj?.update();
+			obj?.draw();
+		}
 		window.requestAnimationFrame(this.run);
-	}
-	run = (timestamp) => {
-		// Delta Time Calculations
-		this.deltaTime = (timestamp - this.start) * 0.001;
-		this.start = timestamp;
-		// console.log(this.deltaTime)
-		
-		this.playerPos = this.playerPos.add(new Vector2(1,0))
-		this.render();
-		window.requestAnimationFrame(this.run);
-	}
-	render() {
-		drawRect(new Vector2(0,0), this.defaultWindowSize, 'white')
-		drawCircle(this.playerPos, 100, 'red')
 	}
 }
 
@@ -34,26 +23,70 @@ class Vector2 {
 		this.x = x;
 		this.y = y;
 	}
-	add(vector){
-		return new Vector2(this.x + vector.x, this.y + vector.y);
+	add(diff){
+		return new Vector2(this.x + diff.x, this.y + diff.y)
+	}
+	scale(scale){
+		return new Vector2(this.x * scale, this.y * scale)
 	}
 }
 
+class Player {
+	constructor(position){
+		this.globalPosition = new Vector2(20,10 );
+		this.size = new Vector2(50,70);
+		this.directionAxis = new Vector2(0, 0);
+		this.velocity = new Vector2(0, 0);
+	}
+	update(){
+		this.velocity = this.velocity.add(new Vector2(this.directionAxis.x, this.directionAxis.y)).scale(2);
+		this.globalPosition = this.globalPosition.add(this.velocity);
+		this.velocity = new Vector2(0,0)
+		//controler
+		this.directionAxis.x = input.left && input.right ? 0 : input.left ? -1 : input.right ? 1 : 0;
+		this.directionAxis.y = input.up && input.down ? 0 : input.up ? -1 : input.down ? 1 : 0;
+	}
+	draw(){
+		drawRect(this.globalPosition, this.size, 'black')
+	}
+}
 
-function drawRect(p, s, c) {
+function drawRect(pos, size, color){
 	context.beginPath();
-	context.rect(p.x, p.y, s.x, s.y);
-	context.fillStyle = c;
+	context.rect(pos.x - (size.x/2), pos.y - (size.y/2), size.x, size.y);
+	context.fillStyle = color;
+	context.fill()
+	context.closePath();
+}
+
+function drawCircle(pos, radius, color){
+	context.beginPath();
+	context.arc(pos.x, pos.y, radius, 0, Math.PI*2);
+	context.fillStyle = color;
 	context.fill();
 	context.closePath();
 }
 
-function drawCircle(p, r, c) {
-	context.beginPath();
-	context.arc(p.x, p.y, r, 0, Math.PI*2);
-	context.fillStyle = c;
-	context.fill();
-	context.closePath();
+let input = {
+	left: false,
+	right: false,
+	down: false,
+	up: false
 }
 
-const engine = new Engine();
+window.addEventListener('keydown', (e) => {
+	if (e.key == 'a'){ input.left = true }
+	else if (e.key == 'd'){ input.right= true }
+	else if (e.key == 'w'){ input.up = true }
+	else if (e.key == 's'){ input.down = true }
+});
+
+window.addEventListener('keyup', (e) => {
+	if (e.key == 'a'){ input.left = false }
+	else if (e.key == 'd'){ input.right= false }
+	else if (e.key == 'w'){ input.up = false }
+	else if (e.key == 's'){ input.down = false }
+});
+
+const engine = new Engine(new Vector2(1024, 567));
+engine.objects.push(new Player(new Vector2(0, 10)));
