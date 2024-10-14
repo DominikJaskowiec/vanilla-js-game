@@ -9,7 +9,7 @@ class Engine {
 		window.requestAnimationFrame(this.run)
 	}
 	run = () => {
-		drawRect(new Vector2(canvas.width/2,canvas.height/2), new Vector2(canvas.width, canvas.height), 'white');
+		drawRect(new Vector2(canvas.width/2,canvas.height/2), new Vector2(canvas.width, canvas.height), '#ffffff');
 		for (const obj of this.objects){
 			obj?.update();
 			obj?.draw();
@@ -17,6 +17,44 @@ class Engine {
 		window.requestAnimationFrame(this.run);
 	}
 }
+
+
+class Player {
+	constructor(position){
+		this.globalPosition = new Vector2(20,10 );
+		this.size = new Vector2(70,70);
+		this.directionAxis = new Vector2(0, 0);
+		this.velocity = new Vector2(0, 0);
+		this.speed = 6;
+	}
+	update(){
+		this.velocity = this.velocity.add(new Vector2(this.directionAxis.x, this.directionAxis.y)).normalize().scale(this.speed);
+		this.globalPosition = this.globalPosition.add(this.velocity);
+		this.velocity = new Vector2(0,0);
+		this.directionAxis.x = input.left && input.right ? 0 : input.left ? -1 : input.right ? 1 : 0;
+		this.directionAxis.y = input.up && input.down ? 0 : input.up ? -1 : input.down ? 1 : 0;
+}
+
+	draw(){
+		drawRect(this.globalPosition, this.size, 'black')
+	}
+}
+
+class Enemy {
+	constructor(pos) {
+		this.pos = pos;
+		this.direction = new Vector2(0,0);
+		this.speed = 2;
+	}
+	update(){
+		this.direction = player.globalPosition.add(this.pos.scale(-1)).normalize();
+		this.pos = this.pos.add(this.direction.scale(this.speed))
+	}
+	draw() {
+		drawCircle(this.pos, 30, 'red')
+	}
+}
+
 
 class Vector2 {
 	constructor(x, y) {
@@ -29,25 +67,12 @@ class Vector2 {
 	scale(scale){
 		return new Vector2(this.x * scale, this.y * scale)
 	}
-}
+	normalize(){
+		this.normalizedLength = Math.sqrt(this.x ** 2 + this.y ** 2);
 
-class Player {
-	constructor(position){
-		this.globalPosition = new Vector2(20,10 );
-		this.size = new Vector2(50,70);
-		this.directionAxis = new Vector2(0, 0);
-		this.velocity = new Vector2(0, 0);
-	}
-	update(){
-		this.velocity = this.velocity.add(new Vector2(this.directionAxis.x, this.directionAxis.y)).scale(2);
-		this.globalPosition = this.globalPosition.add(this.velocity);
-		this.velocity = new Vector2(0,0)
-		//controler
-		this.directionAxis.x = input.left && input.right ? 0 : input.left ? -1 : input.right ? 1 : 0;
-		this.directionAxis.y = input.up && input.down ? 0 : input.up ? -1 : input.down ? 1 : 0;
-	}
-	draw(){
-		drawRect(this.globalPosition, this.size, 'black')
+		if (this.normalizedLength > 0) {
+			return new Vector2( this.x / this.normalizedLength, this.y / this.normalizedLength); 
+		} else return new Vector2(this.x, this.y);
 	}
 }
 
@@ -88,5 +113,10 @@ window.addEventListener('keyup', (e) => {
 	else if (e.key == 's'){ input.down = false }
 });
 
+const player = new Player(new Vector2(0, 0));
+const enemy0 = new Enemy(new Vector2(0, 0));
+const enemy1 = new Enemy(new Vector2(0, 500));
+const enemy2 = new Enemy(new Vector2(1000, 500));
+
 const engine = new Engine(new Vector2(1024, 567));
-engine.objects.push(new Player(new Vector2(0, 10)));
+engine.objects.push(player, enemy0, enemy1, enemy2);
