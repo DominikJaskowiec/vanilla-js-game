@@ -55,7 +55,6 @@ class Enemy {
 	}
 }
 
-
 class Vector2 {
 	constructor(x, y) {
 		this.x = x;
@@ -102,7 +101,6 @@ let input = {
 window.addEventListener('keydown', (e) => {
 	if (e.key == 'a'){ input.left = true }
 	else if (e.key == 'd'){ input.right= true }
-	else if (e.key == 'w'){ input.up = true }
 	else if (e.key == 's'){ input.down = true }
 });
 
